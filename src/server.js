@@ -123,7 +123,12 @@ async function ensureDatabaseSchema() {
   await pool.query("ALTER TABLE managed_users ADD COLUMN IF NOT EXISTS role VARCHAR(60) NOT NULL DEFAULT 'parent'");
   await pool.query("ALTER TABLE managed_users ADD COLUMN IF NOT EXISTS district VARCHAR(80) NOT NULL DEFAULT 'Kigali'");
   await pool.query("ALTER TABLE managed_users ADD COLUMN IF NOT EXISTS is_active TINYINT(1) NOT NULL DEFAULT 1");
-  await pool.query("ALTER TABLE managed_users ADD COLUMN IF NOT EXISTS google_id VARCHAR(120) NULL UNIQUE");
+  await pool.query("ALTER TABLE managed_users ADD COLUMN IF NOT EXISTS google_id VARCHAR(120) NULL");
+  try {
+    await pool.query("CREATE UNIQUE INDEX idx_google_id ON managed_users(google_id)");
+  } catch (e) {
+    // Ignore error if index already exists
+  }
 
   // Extra columns for community reports
   await pool.query("ALTER TABLE reporter_reports ADD COLUMN IF NOT EXISTS incident_type VARCHAR(120) NULL");
