@@ -42,17 +42,7 @@ const envOrigins = (process.env.CORS_ORIGIN || "")
 
 const allowedOrigins = envOrigins.length > 0 ? envOrigins : defaultAllowedOrigins;
 
-app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-        return;
-      }
-      callback(new Error("CORS origin not allowed"));
-    },
-  })
-);
+app.use(cors());
 app.use(express.json());
 
 app.use(
@@ -221,9 +211,29 @@ async function ensureDatabaseSchema() {
       author_name VARCHAR(120) NOT NULL DEFAULT 'System',
       status VARCHAR(40) NULL,
       comment TEXT NULL,
+      note_type VARCHAR(40) NOT NULL DEFAULT 'update',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       INDEX idx_case_updates_case (case_id),
       INDEX idx_case_updates_report (report_id)
+    )
+  `);
+
+  await pool.query("ALTER TABLE case_updates ADD COLUMN IF NOT EXISTS note_type VARCHAR(40) NOT NULL DEFAULT 'update'");
+
+  // ── social_assessments ─────────────────────────────────────────
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS social_assessments (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      report_id INT NOT NULL,
+      case_id VARCHAR(40) NOT NULL,
+      social_worker_id INT NOT NULL,
+      physical_safety TEXT NULL,
+      psychological_state TEXT NULL,
+      family_environment TEXT NULL,
+      recommendation TEXT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_social_assessments_report (report_id),
+      INDEX idx_social_assessments_worker (social_worker_id)
     )
   `);
 

@@ -132,11 +132,7 @@ router.post("/forgot-password", async (req, res) => {
       await sendEmail(account.contact, "Reset Your Childwatch Password", html);
     }
 
-    const includeDebugToken = process.env.NODE_ENV !== "production";
-    const debugPayload = includeDebugToken
-      ? { resetToken: reset.token, expiresAt: reset.expiresAt.toISOString() }
-      : {};
-    return res.json({ ...genericResponse, ...debugPayload });
+    return res.json(genericResponse);
   } catch (error) {
     return res.status(500).json({ message: "Failed to process password reset request", error: error.message });
   }
