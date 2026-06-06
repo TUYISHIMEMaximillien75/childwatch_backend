@@ -130,11 +130,6 @@ async function ensureDatabaseSchema() {
     // Ignore error if index already exists
   }
 
-  // Extra columns for community reports
-  await pool.query("ALTER TABLE reporter_reports ADD COLUMN IF NOT EXISTS incident_type VARCHAR(120) NULL");
-  await pool.query("ALTER TABLE reporter_reports ADD COLUMN IF NOT EXISTS urgency VARCHAR(20) NOT NULL DEFAULT 'normal'");
-  await pool.query("ALTER TABLE reporter_reports ADD COLUMN IF NOT EXISTS sector VARCHAR(120) NULL");
-
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS password_reset_tokens (
@@ -185,6 +180,10 @@ async function ensureDatabaseSchema() {
   `);
 
   await pool.query("ALTER TABLE reporter_reports ADD COLUMN IF NOT EXISTS user_id INT NULL");
+  // Extra columns for community reports
+  await pool.query("ALTER TABLE reporter_reports ADD COLUMN IF NOT EXISTS incident_type VARCHAR(120) NULL");
+  await pool.query("ALTER TABLE reporter_reports ADD COLUMN IF NOT EXISTS urgency VARCHAR(20) NOT NULL DEFAULT 'normal'");
+  await pool.query("ALTER TABLE reporter_reports ADD COLUMN IF NOT EXISTS sector VARCHAR(120) NULL");
   await pool.query("ALTER TABLE reporter_reports MODIFY COLUMN user_id INT NULL");
   await pool.query("ALTER TABLE reporter_reports ADD COLUMN IF NOT EXISTS report_type VARCHAR(20) NOT NULL DEFAULT 'Missing'");
   await pool.query("ALTER TABLE reporter_reports ADD COLUMN IF NOT EXISTS child_name VARCHAR(120) NOT NULL DEFAULT 'Unknown'");
