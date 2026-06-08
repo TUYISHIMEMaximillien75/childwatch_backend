@@ -26,6 +26,7 @@ function toClientReport(row) {
     updatedAt: row.updated_at,
     priority: row.priority,
     assignedTo: row.assigned_to_name,
+    images: row.images ? row.images.split("||").filter(Boolean) : [],
   };
 }
 
@@ -46,9 +47,11 @@ router.get("/", async (req, res) => {
   try {
     let sql = `SELECT r.id, r.case_id, r.user_id, r.report_type, r.child_name, r.child_age, r.child_gender, r.last_seen_location,
                       r.description, r.district, r.status, r.is_anonymous, r.created_at, r.updated_at, r.priority,
-                      ca.assigned_to_name
+                      ca.assigned_to_name,
+                      GROUP_CONCAT(att.file_url SEPARATOR '||') as images
                FROM reporter_reports r
                LEFT JOIN case_assignments ca ON r.case_id = ca.case_id
+               LEFT JOIN attachments att ON r.case_id = att.case_id
                WHERE 1=1`;
     const params = [];
 
@@ -63,7 +66,7 @@ router.get("/", async (req, res) => {
       params.push(like, like, like);
     }
 
-    sql += " ORDER BY r.created_at DESC";
+    sql += " GROUP BY r.id, ca.assigned_to_name ORDER BY r.created_at DESC";
 
     const [rows] = await pool.query(sql, params);
     return res.json({ reports: rows.map(toClientReport) });
@@ -99,10 +102,13 @@ router.patch("/:id/status", async (req, res) => {
     const [updatedRows] = await pool.query(
       `SELECT r.id, r.case_id, r.user_id, r.report_type, r.child_name, r.child_age, r.child_gender, r.last_seen_location,
               r.description, r.district, r.status, r.is_anonymous, r.created_at, r.updated_at, r.priority,
-              ca.assigned_to_name
+              ca.assigned_to_name,
+              GROUP_CONCAT(att.file_url SEPARATOR '||') as images
        FROM reporter_reports r
        LEFT JOIN case_assignments ca ON r.case_id = ca.case_id
+       LEFT JOIN attachments att ON r.case_id = att.case_id
        WHERE r.id = ?
+       GROUP BY r.id, ca.assigned_to_name
        LIMIT 1`,
       [req.params.id],
     );
